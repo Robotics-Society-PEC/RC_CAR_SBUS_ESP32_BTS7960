@@ -148,16 +148,18 @@ void loop()
     // ARM on channel 5
     if ((data.ch[ARM] < 1000) || data.failsafe)
     {
-      motor_left_rpm = 0;
-      motor_right_rpm = 0; // stop all motors if not armed or failsafe
+      motor_left_rpm_1 = 0;
+      motor_left_rpm_2 = 0;
+      motor_right_rpm_3 = 0;
+      motor_right_rpm_4 = 0; // stop all motors if not armed or failsafe
       digitalWrite(R_EN_1, LOW);
       digitalWrite(R_EN_2, LOW);
       digitalWrite(L_EN_1, LOW);
       digitalWrite(L_EN_2, LOW);
-      ledcWrite(motor1Channel, motor_left_rpm);
-      ledcWrite(motor2Channel, 0);
-      ledcWrite(motor3Channel, motor_right_rpm);
-      ledcWrite(motor4Channel, 0);
+      ledcWrite(motor1Channel, motor_left_rpm_1);
+      ledcWrite(motor2Channel, motor_left_rpm_2);
+      ledcWrite(motor3Channel, motor_right_rpm_3);
+      ledcWrite(motor4Channel, motor_right_rpm_4);
     }
     else
     {
