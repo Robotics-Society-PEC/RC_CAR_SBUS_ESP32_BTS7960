@@ -102,6 +102,7 @@ int motor_right_rpm_3 = 0;
 int motor_right_rpm_4 = 0;
 int16_t forward = 0;
 int16_t right = 0;
+int16_t rotate_right = 0;
 
 void setup()
 {
@@ -202,7 +203,43 @@ void loop()
           right = 0;
         }
 
-        if (forward == 0 && right == 0)
+        // handel rotation
+        if (data.ch[RUDDER] >= mid_ch_rudder + deadzone)
+        {
+          Serial.println("rotate right");
+          rotate_right = map(data.ch[RUDDER], mid_ch_rudder, max_ch_rudder, PWM_MIN, PWM_MAX);
+          rotate_right = constrain(rotate_right, PWM_MIN, PWM_MAX);
+          // rotate right
+        }
+        else if (data.ch[RUDDER] < mid_ch_aileron - deadzone)
+        {
+
+          rotate_right = map(data.ch[RUDDER], mid_ch_rudder, min_ch_rudder, PWM_MIN, PWM_MAX);
+          rotate_right = -constrain(rotate_right, PWM_MIN, PWM_MAX);
+          // rotate left
+        }
+        else
+        {
+          rotate_right = 0;
+        }
+
+        if (rotate_right > 0)
+        {
+          // rotate right
+          motor_left_rpm_1 = 0;
+          motor_left_rpm_2 = rotate_right;
+          motor_right_rpm_3 = rotate_right;
+          motor_right_rpm_4 = 0;
+        }
+        else if (rotate_right < 0)
+        {
+          // rotate left
+          motor_left_rpm_1 = rotate_right;
+          motor_left_rpm_2 = 0;
+          motor_right_rpm_3 = 0;
+          motor_right_rpm_4 = rotate_right;
+        }
+        else if (forward == 0 && right == 0)
         {
           // go nowhere
           motor_left_rpm_1 = 0;
@@ -210,37 +247,76 @@ void loop()
           motor_right_rpm_3 = 0;
           motor_right_rpm_4 = 0;
         }
-        else if (forward > 0)
+        else if (forward > 0 && right > 0)
         {
-          // go forward and right/left
+          // go forward right
           motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = forward+right;
+          motor_left_rpm_2 = forward;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = forward-right;
+          motor_right_rpm_4 = forward - right;
         }
-        else if (forward < 0 )
+        else if (forward > 0 && right == 0)
         {
-          // go backward and right/left
-          motor_left_rpm_1 = -forward+right;
+          // go forward
+          motor_left_rpm_1 = 0;
+          motor_left_rpm_2 = forward;
+          motor_right_rpm_3 = 0;
+          motor_right_rpm_4 = forward;
+        }
+        else if (forward > 0 && right < 0)
+        {
+          // go forward left
+          motor_left_rpm_1 = 0;
+          motor_left_rpm_2 = forward + right; // right is negative so to decrease you have to add
+          motor_right_rpm_3 = 0;
+          motor_right_rpm_4 = forward;
+        }
+        else if (forward < 0 && right == 0)
+        {
+          // go backward
+          motor_left_rpm_1 = -forward;
           motor_left_rpm_2 = 0;
-          motor_right_rpm_3 = -forward+right;
+          motor_right_rpm_3 = -forward;
           motor_right_rpm_4 = 0;
         }
-        else if (forward == 0 && right >= 0)
+        else if (forward < 0 && right > 0)
         {
-          // rotate right
-          motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = right;
-          motor_right_rpm_3 = right;
+          // go backward right
+          motor_left_rpm_1 = -forward;
+          motor_left_rpm_2 = 0;
+          motor_right_rpm_3 = -forward - right;
           motor_right_rpm_4 = 0;
         }
-        else if (forward == 0 && right <= 0)
+        else if (forward < 0 && right < 0)
         {
-          // rotate left
-          motor_left_rpm_1 = -right;
+          // go backward left
+          motor_left_rpm_1 = -forward + right;
+          motor_left_rpm_2 = 0;
+          motor_right_rpm_3 = -forward;
+          motor_right_rpm_4 = 0;
+        }
+        // else if (forward == 0 && right >= 0)
+        // {
+        //   // rotate right
+        //   motor_left_rpm_1 = 0;
+        //   motor_left_rpm_2 = right;
+        //   motor_right_rpm_3 = right;
+        //   motor_right_rpm_4 = 0;
+        // }
+        // else if (forward == 0 && right <= 0)
+        // {
+        //   // rotate left
+        //   motor_left_rpm_1 = -right;
+        //   motor_left_rpm_2 = 0;
+        //   motor_right_rpm_3 = 0;
+        //   motor_right_rpm_4 = -right;
+        // }
+        else
+        {
+          motor_left_rpm_1 = 0;
           motor_left_rpm_2 = 0;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = -right;
+          motor_right_rpm_4 = 0;
         }
 
         digitalWrite(R_EN_1, HIGH);
