@@ -213,7 +213,7 @@ void loop()
           rotate_right = constrain(rotate_right, PWM_MIN, PWM_MAX);
           // rotate right
         }
-        else if (data.ch[RUDDER] < mid_ch_aileron - deadzone)
+        else if (data.ch[RUDDER] < mid_ch_rudder - deadzone)
         {
 
           rotate_right = map(data.ch[RUDDER], mid_ch_rudder, min_ch_rudder, PWM_MIN, PWM_MAX);
@@ -233,7 +233,7 @@ void loop()
           motor_right_rpm_3 = rotate_right;
           motor_right_rpm_4 = 0;
         }
-        else if (rotate_right < 0)
+        else if (-rotate_right < 0)
         {
           // rotate left
           motor_left_rpm_1 = rotate_right;
