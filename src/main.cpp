@@ -22,7 +22,8 @@
   ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 */
 
-#include "src/sbus/sbus.h"
+#include <Arduino.h>
+#include <sbus.h>
 
 #define AILERON 0
 #define ELEVATOR 1
