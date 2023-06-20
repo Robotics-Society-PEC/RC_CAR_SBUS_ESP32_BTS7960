@@ -234,13 +234,13 @@ void loop()
           motor_right_rpm_3 = rotate_right;
           motor_right_rpm_4 = 0;
         }
-        else if (-rotate_right < 0)
+        else if (rotate_right < 0)
         {
           // rotate left
-          motor_left_rpm_1 = rotate_right;
+          motor_left_rpm_1 = -rotate_right;
           motor_left_rpm_2 = 0;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = rotate_right;
+          motor_right_rpm_4 = -rotate_right;
         }
         else if (forward == 0 && right == 0)
         {
