@@ -82,18 +82,18 @@ unsigned last_packet_recieved = 0;
 #define failsafe_time_in_millis 2000
 
 /////////////////////////////////////////////////User Specified Data /////////////////////////////////////////////
-int max_ch_rudder = 1964;
-int max_ch_throttle = 1948;
-int max_ch_elevator = 1776;
-int max_ch_aileron = 1934;
-int min_ch_rudder = 160;
-int min_ch_throttle = 84;
-int min_ch_elevator = 84;
-int min_ch_aileron = 90;
-int mid_ch_rudder = 1036;
-int mid_ch_throttle = 1237;
-int mid_ch_elevator = 834;
-int mid_ch_aileron = 1019;
+int max_ch_rudder = 1801;
+int max_ch_throttle = 1807;
+int max_ch_elevator = 1807;
+int max_ch_aileron = 1619;
+int min_ch_rudder = 240;
+int min_ch_throttle = 246;
+int min_ch_elevator = 240;
+int min_ch_aileron = 84;
+int mid_ch_rudder = 1024;
+int mid_ch_throttle = 1024;
+int mid_ch_elevator = 1020;
+int mid_ch_aileron = 807;
 
 #define deadzone 20 // not yet used
 
@@ -104,6 +104,8 @@ int motor_right_rpm_4 = 0;
 int16_t forward = 0;
 int16_t right = 0;
 int16_t rotate_right = 0;
+
+void calibrate();
 
 void setup()
 {
@@ -298,22 +300,6 @@ void loop()
           motor_right_rpm_3 = -forward;
           motor_right_rpm_4 = 0;
         }
-        // else if (forward == 0 && right >= 0)
-        // {
-        //   // rotate right
-        //   motor_left_rpm_1 = 0;
-        //   motor_left_rpm_2 = right;
-        //   motor_right_rpm_3 = right;
-        //   motor_right_rpm_4 = 0;
-        // }
-        // else if (forward == 0 && right <= 0)
-        // {
-        //   // rotate left
-        //   motor_left_rpm_1 = -right;
-        //   motor_left_rpm_2 = 0;
-        //   motor_right_rpm_3 = 0;
-        //   motor_right_rpm_4 = -right;
-        // }
         else
         {
           motor_left_rpm_1 = 0;
