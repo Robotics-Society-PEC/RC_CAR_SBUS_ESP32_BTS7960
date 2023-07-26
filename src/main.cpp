@@ -82,30 +82,22 @@ unsigned last_packet_recieved = 0;
 #define failsafe_time_in_millis 2000
 
 /////////////////////////////////////////////////User Specified Data /////////////////////////////////////////////
-int max_ch_rudder = 1801;
-int max_ch_throttle = 1807;
-int max_ch_elevator = 1807;
-int max_ch_aileron = 1619;
-int min_ch_rudder = 240;
-int min_ch_throttle = 246;
-int min_ch_elevator = 240;
-int min_ch_aileron = 84;
-int mid_ch_rudder = 1024;
-int mid_ch_throttle = 1024;
-int mid_ch_elevator = 1020;
-int mid_ch_aileron = 807;
+int max_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+int mid_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+int min_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
 
-#define deadzone 20 // not yet used
+#define deadzone 20
 
 int motor_left_rpm_1 = 0;
 int motor_left_rpm_2 = 0;
 int motor_right_rpm_3 = 0;
 int motor_right_rpm_4 = 0;
-int16_t forward = 0;
-int16_t right = 0;
-int16_t rotate_right = 0;
+int16_t y_axis_movement = 0;
+int16_t x_axis_movement = 0;
+int16_t z_axis_rotation = 0;
 
 void calibrate();
+void calibrate_alternate();
 
 void setup()
 {
@@ -149,7 +141,7 @@ void loop()
     data = sbus_rx.data();
 
     // ARM on channel 5
-    if ((data.ch[ARM] < 1000) || data.failsafe)
+    if ((data.ch[ARM] < (max_ch[ARM] + min_ch[ARM]) / 2) || data.failsafe)
     {
       motor_left_rpm_1 = 0;
       motor_left_rpm_2 = 0;
@@ -170,81 +162,81 @@ void loop()
       if (!data.lost_frame)
       {
 
-        if (data.ch[ELEVATOR] >= mid_ch_elevator + deadzone)
+        if (data.ch[ELEVATOR] >= mid_ch[ELEVATOR] + deadzone)
         {
           Serial.println("go forward");
-          forward = map(data.ch[ELEVATOR], mid_ch_elevator, max_ch_elevator, PWM_MIN, PWM_MAX);
-          forward = constrain(forward, PWM_MIN, PWM_MAX);
+          y_axis_movement = map(data.ch[ELEVATOR], mid_ch[ELEVATOR], max_ch[ELEVATOR], PWM_MIN, PWM_MAX);
+          y_axis_movement = constrain(y_axis_movement, PWM_MIN, PWM_MAX);
           // go forward
         }
-        else if (data.ch[ELEVATOR] < mid_ch_elevator - deadzone)
+        else if (data.ch[ELEVATOR] < mid_ch[ELEVATOR] - deadzone)
         {
 
-          forward = map(data.ch[ELEVATOR], mid_ch_elevator, min_ch_elevator, PWM_MIN, PWM_MAX);
-          forward = -constrain(forward, PWM_MIN, PWM_MAX);
+          y_axis_movement = map(data.ch[ELEVATOR], mid_ch[ELEVATOR], min_ch[ELEVATOR], PWM_MIN, PWM_MAX);
+          y_axis_movement = -constrain(y_axis_movement, PWM_MIN, PWM_MAX);
           // go backward
         }
         else
         {
-          forward = 0;
+          y_axis_movement = 0;
         }
 
-        if (data.ch[AILERON] >= mid_ch_aileron + deadzone)
+        if (data.ch[AILERON] >= mid_ch[AILERON] + deadzone)
         {
           Serial.println("go right");
-          right = map(data.ch[AILERON], mid_ch_aileron, max_ch_aileron, PWM_MIN, PWM_MAX);
-          right = constrain(right, PWM_MIN, PWM_MAX);
+          x_axis_movement = map(data.ch[AILERON], mid_ch[AILERON], max_ch[AILERON], PWM_MIN, PWM_MAX);
+          x_axis_movement = constrain(x_axis_movement, PWM_MIN, PWM_MAX);
           // go right
         }
-        else if (data.ch[AILERON] < mid_ch_aileron - deadzone)
+        else if (data.ch[AILERON] < mid_ch[AILERON] - deadzone)
         {
 
-          right = map(data.ch[AILERON], mid_ch_aileron, min_ch_aileron, PWM_MIN, PWM_MAX);
-          right = -constrain(right, PWM_MIN, PWM_MAX);
+          x_axis_movement = map(data.ch[AILERON], mid_ch[AILERON], min_ch[AILERON], PWM_MIN, PWM_MAX);
+          x_axis_movement = -constrain(x_axis_movement, PWM_MIN, PWM_MAX);
           // go left
         }
         else
         {
-          right = 0;
+          x_axis_movement = 0;
         }
 
         // handel rotation
-        if (data.ch[RUDDER] >= mid_ch_rudder + deadzone)
+        if (data.ch[RUDDER] >= mid_ch[RUDDER] + deadzone)
         {
           Serial.println("rotate right");
-          rotate_right = map(data.ch[RUDDER], mid_ch_rudder, max_ch_rudder, PWM_MIN, PWM_MAX);
-          rotate_right = constrain(rotate_right, PWM_MIN, PWM_MAX);
+          z_axis_rotation = map(data.ch[RUDDER], mid_ch[RUDDER], max_ch[RUDDER], PWM_MIN, PWM_MAX);
+          z_axis_rotation = constrain(z_axis_rotation, PWM_MIN, PWM_MAX);
           // rotate right
         }
-        else if (data.ch[RUDDER] < mid_ch_rudder - deadzone)
+        else if (data.ch[RUDDER] < mid_ch[RUDDER] - deadzone)
         {
 
-          rotate_right = map(data.ch[RUDDER], mid_ch_rudder, min_ch_rudder, PWM_MIN, PWM_MAX);
-          rotate_right = -constrain(rotate_right, PWM_MIN, PWM_MAX);
+          z_axis_rotation = map(data.ch[RUDDER], mid_ch[RUDDER], min_ch[RUDDER], PWM_MIN, PWM_MAX);
+          z_axis_rotation = -constrain(z_axis_rotation, PWM_MIN, PWM_MAX);
           // rotate left
         }
         else
         {
-          rotate_right = 0;
+          z_axis_rotation = 0;
         }
 
-        if (rotate_right > 0)
+        if (z_axis_rotation > 0)
         {
           // rotate right
           motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = rotate_right;
-          motor_right_rpm_3 = rotate_right;
+          motor_left_rpm_2 = z_axis_rotation;
+          motor_right_rpm_3 = z_axis_rotation;
           motor_right_rpm_4 = 0;
         }
-        else if (rotate_right < 0)
+        else if (z_axis_rotation < 0)
         {
           // rotate left
-          motor_left_rpm_1 = -rotate_right;
+          motor_left_rpm_1 = -z_axis_rotation;
           motor_left_rpm_2 = 0;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = -rotate_right;
+          motor_right_rpm_4 = -z_axis_rotation;
         }
-        else if (forward == 0 && right == 0)
+        else if (y_axis_movement == 0 && x_axis_movement == 0)
         {
           // go nowhere
           motor_left_rpm_1 = 0;
@@ -252,52 +244,52 @@ void loop()
           motor_right_rpm_3 = 0;
           motor_right_rpm_4 = 0;
         }
-        else if (forward > 0 && right > 0)
+        else if (y_axis_movement > 0 && x_axis_movement > 0)
         {
           // go forward right
           motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = forward;
+          motor_left_rpm_2 = y_axis_movement;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = forward - right;
+          motor_right_rpm_4 = y_axis_movement - x_axis_movement;
         }
-        else if (forward > 0 && right == 0)
+        else if (y_axis_movement > 0 && x_axis_movement == 0)
         {
           // go forward
           motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = forward;
+          motor_left_rpm_2 = y_axis_movement;
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = forward;
+          motor_right_rpm_4 = y_axis_movement;
         }
-        else if (forward > 0 && right < 0)
+        else if (y_axis_movement > 0 && x_axis_movement < 0)
         {
           // go forward left
           motor_left_rpm_1 = 0;
-          motor_left_rpm_2 = forward + right; // right is negative so to decrease you have to add
+          motor_left_rpm_2 = y_axis_movement + x_axis_movement; // right is negative so to decrease you have to add
           motor_right_rpm_3 = 0;
-          motor_right_rpm_4 = forward;
+          motor_right_rpm_4 = y_axis_movement;
         }
-        else if (forward < 0 && right == 0)
+        else if (y_axis_movement < 0 && x_axis_movement == 0)
         {
           // go backward
-          motor_left_rpm_1 = -forward;
+          motor_left_rpm_1 = -y_axis_movement;
           motor_left_rpm_2 = 0;
-          motor_right_rpm_3 = -forward;
+          motor_right_rpm_3 = -y_axis_movement;
           motor_right_rpm_4 = 0;
         }
-        else if (forward < 0 && right > 0)
+        else if (y_axis_movement < 0 && x_axis_movement > 0)
         {
           // go backward right
-          motor_left_rpm_1 = -forward;
+          motor_left_rpm_1 = -y_axis_movement;
           motor_left_rpm_2 = 0;
-          motor_right_rpm_3 = -forward - right;
+          motor_right_rpm_3 = -y_axis_movement - x_axis_movement;
           motor_right_rpm_4 = 0;
         }
-        else if (forward < 0 && right < 0)
+        else if (y_axis_movement < 0 && x_axis_movement < 0)
         {
           // go backward left
-          motor_left_rpm_1 = -forward + right;
+          motor_left_rpm_1 = -y_axis_movement + x_axis_movement;
           motor_left_rpm_2 = 0;
-          motor_right_rpm_3 = -forward;
+          motor_right_rpm_3 = -y_axis_movement;
           motor_right_rpm_4 = 0;
         }
         else
@@ -308,10 +300,21 @@ void loop()
           motor_right_rpm_4 = 0;
         }
 
-        digitalWrite(R_EN_1, HIGH);
-        digitalWrite(R_EN_2, HIGH);
-        digitalWrite(L_EN_1, HIGH);
-        digitalWrite(L_EN_2, HIGH);
+        if (y_axis_movement != 0 || x_axis_movement != 0 || z_axis_rotation != 0 || stop_mode == STOP_HARD_MODE)
+        {
+          digitalWrite(R_EN_1, HIGH);
+          digitalWrite(R_EN_2, HIGH);
+          digitalWrite(L_EN_1, HIGH);
+          digitalWrite(L_EN_2, HIGH);
+        }
+        else
+        {
+          // stop softly output floating
+          digitalWrite(R_EN_1, LOW);
+          digitalWrite(R_EN_2, LOW);
+          digitalWrite(L_EN_1, LOW);
+          digitalWrite(L_EN_2, LOW);
+        }
         motor_left_rpm_1 = constrain(motor_left_rpm_1, PWM_MIN, PWM_MAX);
         motor_left_rpm_2 = constrain(motor_left_rpm_2, PWM_MIN, PWM_MAX);
         motor_right_rpm_3 = constrain(motor_right_rpm_3, PWM_MIN, PWM_MAX);
@@ -341,12 +344,48 @@ void loop()
     }
   }
 }
+void calibrate_alternate()
+{
+  // add live calibration for sticks butt center calibration of some other channel
+  // calibration on every startup
+  // on startup rotate sticks and switches to all of thier end points
+  // and then center all sticks within 20 seconds
+  Serial.println("LIVE CALIBRATION MODE");
+  for (int i = 0; i < 16; i++)
+  {
+    min_ch[i] = 1000;
+    max_ch[i] = 1000;
+    mid_ch[i] = 1000;
+  }
+  unsigned t = millis();
+  while (true and millis() - t < 20000)
+  {
+    if (sbus_rx.Read())
+    {
+      data = sbus_rx.data();
+      Serial.print("Move sticks to all corners   ");
+      Serial.println(t + 15000 - millis());
+
+      for (int i = 0; i < 16; i++)
+      {
+        max_ch[i] = data.ch[i] > max_ch[i] ? data.ch[i] : max_ch[i];
+        min_ch[i] = data.ch[i] < min_ch[i] ? data.ch[i] : min_ch[i];
+      }
+    }
+  }
+
+  for (int i = 0; i < 16; i++)
+  {
+    mid_ch[i] = data.ch[i];
+  }
+}
 
 void calibrate()
 {
   Serial.println("Rotate sticks in all directions");
-  int max_ch_rudder = 1000, max_ch_throttle = 1000, max_ch_elevator = 1000, max_ch_aileron = 1000;
-  int min_ch_rudder = 1000, min_ch_throttle = 1000, min_ch_elevator = 1000, min_ch_aileron = 1000;
+  int max_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+  int mid_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+  int min_ch[16] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
 
   unsigned t = millis();
   while (true and millis() - t < 15000)
@@ -356,15 +395,12 @@ void calibrate()
       data = sbus_rx.data();
       Serial.print("Move sticks to all corners   ");
       Serial.println(t + 15000 - millis());
-      max_ch_aileron = data.ch[AILERON] > max_ch_aileron ? data.ch[AILERON] : max_ch_aileron;
-      max_ch_elevator = data.ch[ELEVATOR] > max_ch_elevator ? data.ch[ELEVATOR] : max_ch_elevator;
-      max_ch_throttle = data.ch[THROTTLE] > max_ch_throttle ? data.ch[THROTTLE] : max_ch_throttle;
-      max_ch_rudder = data.ch[RUDDER] > max_ch_rudder ? data.ch[RUDDER] : max_ch_rudder;
 
-      min_ch_aileron = data.ch[AILERON] < min_ch_aileron ? data.ch[AILERON] : min_ch_aileron;
-      min_ch_elevator = data.ch[ELEVATOR] < min_ch_elevator ? data.ch[ELEVATOR] : min_ch_elevator;
-      min_ch_throttle = data.ch[THROTTLE] < min_ch_throttle ? data.ch[THROTTLE] : min_ch_throttle;
-      min_ch_rudder = data.ch[RUDDER] < min_ch_rudder ? data.ch[RUDDER] : min_ch_rudder;
+      for (int i = 0; i < 16; i++)
+      {
+        max_ch[i] = data.ch[i] > max_ch[i] ? data.ch[i] : max_ch[i];
+        min_ch[i] = data.ch[i] < min_ch[i] ? data.ch[i] : min_ch[i];
+      }
     }
   }
 
@@ -378,50 +414,39 @@ void calibrate()
       Serial.println(t + 10000 - millis());
     }
   }
-  mid_ch_aileron = data.ch[AILERON];
-  mid_ch_elevator = data.ch[ELEVATOR];
-  mid_ch_throttle = data.ch[THROTTLE];
-  mid_ch_rudder = data.ch[RUDDER];
+
+  for (int i = 0; i < 16; i++)
+  {
+    mid_ch[i] = data.ch[i];
+  }
 
   Serial.println("Calibration done paste this in code");
-  Serial.print("int max_ch_rudder = ");
-  Serial.print(max_ch_rudder);
-  Serial.println(";");
-  Serial.print("int max_ch_throttle = ");
-  Serial.print(max_ch_throttle);
-  Serial.println(";");
-  Serial.print("int max_ch_elevator = ");
-  Serial.print(max_ch_elevator);
-  Serial.println(";");
-  Serial.print("int max_ch_aileron = ");
-  Serial.print(max_ch_aileron);
-  Serial.println(";");
+  Serial.print("int max_ch[16] = {");
+  for (int i = 0; i < 15; i++)
+  {
+    Serial.print(max_ch[i]);
+    Serial.println(",");
+  }
+  Serial.print(max_ch[15]);
+  Serial.println("};");
 
-  Serial.print("int min_ch_rudder = ");
-  Serial.print(min_ch_rudder);
-  Serial.println(";");
-  Serial.print("int min_ch_throttle = ");
-  Serial.print(min_ch_throttle);
-  Serial.println(";");
-  Serial.print("int min_ch_elevator = ");
-  Serial.print(min_ch_elevator);
-  Serial.println(";");
-  Serial.print("int min_ch_aileron = ");
-  Serial.print(min_ch_aileron);
-  Serial.println(";");
+  Serial.print("int mid_ch[16] = {");
+  for (int i = 0; i < 15; i++)
+  {
+    Serial.print(mid_ch[i]);
+    Serial.println(",");
+  }
+  Serial.print(mid_ch[15]);
+  Serial.println("};");
 
-  Serial.print("int mid_ch_rudder = ");
-  Serial.print(mid_ch_rudder);
-  Serial.println(";");
-  Serial.print("int mid_ch_throttle = ");
-  Serial.print(mid_ch_throttle);
-  Serial.println(";");
-  Serial.print("int mid_ch_elevator = ");
-  Serial.print(mid_ch_elevator);
-  Serial.println(";");
-  Serial.print("int mid_ch_aileron = ");
-  Serial.print(mid_ch_aileron);
-  Serial.println(";");
+  Serial.print("int min_ch[16] = {");
+  for (int i = 0; i < 15; i++)
+  {
+    Serial.print(min_ch[i]);
+    Serial.println(",");
+  }
+  Serial.print(min_ch[15]);
+  Serial.println("};");
 
   while (true)
   {
